@@ -3,7 +3,7 @@ namespace app\services;
 
 class CaptchaRecognizer
 {
-	public $apiKey = '';
+	public $apiKey = '1d43fa2cc73a8f6e967c802c56abf7bd';
 	public $sendhost = 'antigate.com';
 	public $is_verbose = true;
 	public $rtimeout = 5;
