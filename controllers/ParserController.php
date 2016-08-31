@@ -11,6 +11,10 @@ class ParserController extends Controller
 {
     public function actionIndex()
     {
+        if ((new ParserManager())->isLoading()) {
+            return $this->redirect(['view']);
+        }
+        
         $request = \Yii::$app->request;
 
         $model = new ParserFilterForm();

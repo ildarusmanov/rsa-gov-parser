@@ -8,8 +8,6 @@ class ParserController extends Controller
 {
     public function actionRun()
     {
-    	for ($i = 0; $i < 100; $i++) {
-    		(new ParserManager())->run();
-    	}
+    	(new ParserManager())->run();
     }
 }

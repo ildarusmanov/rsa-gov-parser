@@ -46,7 +46,7 @@ class Parser
 			throw new \Exception('No items found');
 		}
 
-		return $matches;
+		return $matches[1];
 	}
 
 	public function getItemsByPageId($pageId)
@@ -56,7 +56,7 @@ class Parser
 				$content = $this->getListingPage($pageId);
 
 				foreach ($this->getPageItems($content) as $item) {
-					$items[] = $item[1];
+					$items[] = $item;
 				}
 
 				$pageId++;				

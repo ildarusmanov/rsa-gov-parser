@@ -39,6 +39,8 @@ class ParserManager
 
 	public function run()
 	{
+		$this->log('Start parser...');
+
 		if ($this->isLocked()) {
 			return;
 		}
@@ -66,6 +68,8 @@ class ParserManager
 
 	protected function loadState()
 	{
+		$this->log('Load state');
+
 		$this->state = new ParserState();
 
 		return $this;
@@ -73,6 +77,8 @@ class ParserManager
 
 	protected function stepInit()
 	{
+		$this->log('Initial step');
+
 		$filterData = $this->state->getStateParam('filter');
 
 		if ($filterData == null) {
@@ -88,6 +94,8 @@ class ParserManager
 
 	protected function stepLoadListing()
 	{
+		$this->log('Load listing');
+
 		$items = $this->state->getStateParam('items');
 
 		if ($items == null) {
@@ -98,9 +106,13 @@ class ParserManager
 
 		$pageId = $this->state->getStateParam('pageId');
 
+		$this->log('Load page #' . $pageId);
+
 		$parser = new Parser($filterData);
 
 		$newItems = $parser->getItemsByPageId($pageId);
+
+		$this->log(sizeof($newItems) . ' items parsed');
 
 		if (sizeof($newItems) == 0) {
 			$this->state->setStateParam('step', self::STEP_LOAD_ITEMS);
@@ -118,10 +130,14 @@ class ParserManager
 
 	protected function stepLoadItems()
 	{
+		$this->log('Load items');
+
 		$items = $this->state->getStateParam('items');
 
 		$itemId = array_pop($items);
 
+		$this->log('Parse item #' . $itemId);
+		
 		$this->parseItem($itemId);
 
 		$this->state->setStateParam('items', $items);
@@ -134,11 +150,15 @@ class ParserManager
 
 	public function isLocked()
 	{
+		$this->log('Check is locked?');
+
 		return file_exists(self::LOCK_FILE_PATH);
 	}
 
 	public function lock()
 	{
+		$this->log('Locks');
+
 		sleep(1);
 
 		touch(self::LOCK_FILE_PATH);
@@ -146,6 +166,8 @@ class ParserManager
 
 	public function unlock()
 	{
+		$this->log('Unlock');
+
 		sleep(1);
 
 		if ($this->isLocked()) {
@@ -155,10 +177,18 @@ class ParserManager
 
 	protected function parseItem($itemId)
 	{
+		$this->log('Parse item id = ' . $itemId);
+
 		$parsedData = (new Parser())->getViewPage($itemId);
 
 		$converter = new ItemDataConverter($parseData);
 
 		(new ParserWriter())->write($converter->getData());
+	}
+
+	protected function log($msg, $type = 'info')
+	{
+		echo '[' . $type . ']: ' . $msg  . "\r\n";
+
 	}
 }
