@@ -181,7 +181,7 @@ class ParserManager
 
 		$parsedData = (new Parser())->getViewPage($itemId);
 
-		$converter = new ItemDataConverter($parseData);
+		$converter = new ItemDataConverter($parsedData);
 
 		(new ParserWriter())->write($converter->getData());
 	}

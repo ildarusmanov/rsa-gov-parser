@@ -12,7 +12,7 @@ class Parser
 	const PAGE_LIMIT = 50;
 	const ITEM_REGEX = '/<tr id="id\_([^"]+)"/siU';
 	const CAPTCHA_REGEX = '"captcha\.php\?sid=\d+"';
-	const MAX_PAGE_ID = 5;
+	const MAX_PAGE_ID = 2;
 
 	public function __construct($data = [])
 	{
@@ -51,6 +51,8 @@ class Parser
 
 	public function getItemsByPageId($pageId)
 	{
+		$items = [];
+
 		try {
 			while ($pageId < self::MAX_PAGE_ID) {
 				$content = $this->getListingPage($pageId);
@@ -75,24 +77,34 @@ class Parser
 	public function getViewPage($itemId)
 	{
 		$curl = new \Curl\Curl();
-		$curl->get('http://188.254.71.82/rds_ts_pub/?show=view&id_object=' . $itemId);
+		$itemUrl = 'http://188.254.71.82/rds_ts_pub/?show=view&id_object=' . $itemId;
+		$curl->get($itemUrl);
+		$content = $curl->response;
+
+		echo 'GET Url: ' . $itemUrl . "\r\n";
 
 		$content = iconv('cp1251', 'utf-8', $curl->response);
 
 		if (preg_match_all(self::CAPTCHA_REGEX, $content, $captchaMatches)) {
-			$captchaUrl = 'http://188.254.71.82/rds_ts_pub/' . $captchaMatches[0];
-			$captchaCode = $this->getCaptchaCode($captchaUrl);
 
-			$curl = new \Curl\Curl();
-			$curl->post('http://188.254.71.82/rds_ts_pub/reg.php', [
+			$captchaUrl = 'http://188.254.71.82/rds_ts_pub/' . $captchaMatches[0][0];
+			$captchaCode = $this->getCaptchaCode($captchaUrl);
+			echo 'Url: ' . $captchaUrl . "\r\n";
+
+			$captchaUrl = 'http://188.254.71.82/rds_ts_pub/reg.php';
+			echo 'Url: ' . $captchaUrl . "\r\n";
+
+			$curl->post($captchaUrl, [
 					'captcha' => $captchaCode,
 				]);
 
-			$curl = new \Curl\Curl();
-			$curl->get('http://188.254.71.82/rds_ts_pub/?show=view&id_object=' . $itemId);
+
+			$curl->get($itemUrl);
 
 			$content = iconv('cp1251', 'utf-8', $curl->response);
 		}
+
+		echo "\r\n==============\r\n" . $content . "\r\n==============\r\n";
 
 		$data = $this->parseItemContent($content);
 

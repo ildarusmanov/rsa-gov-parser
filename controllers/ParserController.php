@@ -36,6 +36,11 @@ class ParserController extends Controller
         return $this->render('view', ['isLoading' => $isLoading]);
     }
 
+    public function actionRun()
+    {
+        (new ParserManager())->run();
+    }
+
     /*
     public function actionParse()
     {

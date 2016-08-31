@@ -35,7 +35,7 @@ $config = [
         ],
         'parser' => [
             'class' => 'app\services\Parser',
-            'captchaParser' => 'app\services\CaptchaParser',
+            'captchaParser' => 'app\services\CaptchaRecognizer',
         ],
         'db' => require(__DIR__ . '/db.php'),
         /*

@@ -11,10 +11,10 @@ class ParserWriter
 		fclose($handle);
 	}
 
-	public function writeData($data)
+	public function write($data)
 	{
 		$handle = fopen(self::RESULT_CSV_PATH, "a+");
-		fputscsv($handle, $data);
+		fputcsv($handle, $data);
 		fclose($handle);	
 	}
 }
