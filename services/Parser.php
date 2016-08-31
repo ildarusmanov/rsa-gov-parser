@@ -9,7 +9,7 @@ class Parser
 	protected $items;
 
 	const URL_1 = 'http://public.fsa.gov.ru/table_rds_pub_ts/index.php';
-	const URL_2 = '';
+
 	const PAGE_LIMIT = 50;
 	const ITEM_REGEX = '/<tr id="id\_([^"]+)"/siU';
 	const CAPTCHA_REGEX = '"captcha\.php\?sid=\d+"';
@@ -80,6 +80,29 @@ class Parser
 		}
 
 		return $matches;
+	}
+
+	public function getPageItems($pageId)
+	{
+		try {
+			while ($pageId < self::MAX_PAGE_ID) {
+				$content = $this->getListingPage($pageId);
+
+				foreach ($this->getPageItems($content) as $item) {
+					$this->items[] = $item[1];
+				}
+
+				$pageId++;				
+			}
+		} catch(\Exception $e) {
+			return;
+		}
+
+		if (sizeof($this->items) == 0) {
+			return [];
+		}
+
+		return $this->items;
 	}
 
 	public function getViewPage($itemId)
