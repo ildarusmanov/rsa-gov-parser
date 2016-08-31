@@ -10,22 +10,38 @@ class ParserManager
 	const STEP_LOAD_ITEMS = 300;
 	const STEP_FINISHED = 400;
 
+	const LOCK_FILE_PATH = __DIR__ . '/runtime/state/running.state';
+
 	protected $state;
 
-	public function __construct()
+	public function start($data)
 	{
 		$this->loadState();
-	}
 
-	protected function loadState()
+		$this->state->setStateParam('filter', $data);
+		$this->state->setStateParam('step', self::STEP_INIT);
+	}\
+
+	public function isLoading()
 	{
-		$this->state = new ParserState();
+		$step = $this->state->getStateParam('step');
 
-		return $this;
+		if ($step == null || $step == self::STEP_FINISHED) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public function run()
 	{
+		if ($this->isLocked()) {
+			return;
+		}
+
+
+		$this->lock();
+
 		$this->loadState();
 
 		$step = $this->state->getStateParam('step');
@@ -45,6 +61,15 @@ class ParserManager
 		if ($step == self::STEP_LOAD_ITEMS) {
 			return $this->stepLoadItems();
 		}
+
+		$this->unlock();
+	}
+
+	protected function loadState()
+	{
+		$this->state = new ParserState();
+
+		return $this;
 	}
 
 	protected function stepInit()
@@ -56,27 +81,81 @@ class ParserManager
 			return;
 		}
 
+		(new ParserWriter)->resetFile();
+
 		$this->state->setStateParam('pageId', 0);
 		$this->state->setStateParam('step', self::STEP_LOAD_LISTING);
 	}
 
 	protected function stepLoadListing()
 	{
+		$items = $this->state->getStateParam('items');
+
+		if ($items == null) {
+			$items = [];
+		}
+
 		$filterData = $this->state->getStateParam('filter');
 
 		$pageId = $this->state->getStateParam('pageId');
+
 		$parser = new Parser($filterData);
 
-		$items = $parser->getPageItems($pageId);
+		$newItems = $parser->getPageItems($pageId);
+
+		if (sizeof($newItems) == 0) {
+			$this->state->setStateParam('step', self::STEP_LOAD_ITEMS);
+			$this->state->setStateParam('pageId', 0);
+			return;
+		}
+
+		$items = array_merge($items, $newItems);
 
 		$pageId++;
 
 		$this->state->setStateParam('pageId', $pageId);
-
+		$this->state->setStateParam('items', $items);
 	}
 
 	protected function stepLoadItems()
 	{
-		;
+		$items = $this->state->getStateParam('items');
+
+		$itemId = array_pop($items);
+
+		$this->parseItem($itemId);
+
+		$this->state->setStateParam('items', $items);
+
+		if (sizeof($items) == 0) {
+			$this->state->setStateParam('step', self::STEP_FINISHED);
+			return;
+		}
+	}
+
+	public function isLocked()
+	{
+		return file_exists(self::LOCK_FILE_PATH);
+	}
+
+	public function lock()
+	{
+		touch(self::LOCK_FILE_PATH);
+	}
+
+	public+ function unlock()
+	{
+		if ($this->isLocked()) {
+			unlink(self::LOCK_FILE_PATH);
+		}
+	}
+
+	protected function parseItem($itemId)
+	{
+		$parsedData = (new Parser())->getViewPage($itemId);
+
+		$converter = new ItemDataConverter($parseData);
+
+		(new ParserWriter())->write($converter->getData());
 	}
 }

@@ -6,50 +6,17 @@ use app\models\ParserFilterForm;
 class Parser
 {
 	protected $data;
-	protected $items;
 
 	const URL_1 = 'http://public.fsa.gov.ru/table_rds_pub_ts/index.php';
 
 	const PAGE_LIMIT = 50;
 	const ITEM_REGEX = '/<tr id="id\_([^"]+)"/siU';
 	const CAPTCHA_REGEX = '"captcha\.php\?sid=\d+"';
-	const MAX_PAGE_ID = 100000;
-	const RESULT_CSV_PATH = 'csv/parsed.csv';
+	const MAX_PAGE_ID = 1;
 
-
-	public function __construct($data)
+	public function __construct($data = [])
 	{
 		$this->data = $data;
-		$this->items = [];
-		$this->initFile();
-	}
-
-	public function run()
-	{
-		$pageId = 0;
-		$page = [];
-
-		try {
-			while ($pageId < self::MAX_PAGE_ID) {
-				$content = $this->getListingPage($pageId);
-
-				foreach ($this->getPageItems($content) as $item) {
-					$this->items[] = $item[1];
-				}
-
-				$pageId++;				
-			}
-		} catch(\Exception $e) {
-			echo $e->getMessage();
-		}
-
-		if (sizeof($this->items) == 0) {
-			return;
-		}
-
-		foreach ($this->items as $itemId) {
-			$this->getViewPage($itemId);
-		}
 	}
 
 	public function getListingPage($pageId = 0)
@@ -89,20 +56,20 @@ class Parser
 				$content = $this->getListingPage($pageId);
 
 				foreach ($this->getPageItems($content) as $item) {
-					$this->items[] = $item[1];
+					$items[] = $item[1];
 				}
 
 				$pageId++;				
 			}
 		} catch(\Exception $e) {
-			return;
-		}
-
-		if (sizeof($this->items) == 0) {
 			return [];
 		}
 
-		return $this->items;
+		if (sizeof($items) == 0) {
+			return [];
+		}
+
+		return $items;
 	}
 
 	public function getViewPage($itemId)
@@ -129,7 +96,7 @@ class Parser
 
 		$data = $this->parseItemContent($content);
 
-		$this->writeData($data);
+		return $data;
 	}
 
 	public function parseItemContent($content)
@@ -139,18 +106,6 @@ class Parser
 		return $parser->getData();
 	}
 
-	public function initFile()
-	{
-		$handle = fopen(self::RESULT_CSV_PATH, "w+");
-		fclose($handle);
-	}
-
-	public function writeData($data)
-	{
-		$handle = fopen(self::RESULT_CSV_PATH, "a+");
-		fputscsv($handle, $data);
-		fclose($handle);	
-	}
 
 	public function getCaptchaCode($captchaUrl)
 	{

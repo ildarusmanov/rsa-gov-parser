@@ -4,8 +4,7 @@ namespace app\controllers;
 
 use Yii;
 use yii\web\Controller;
-use app\services\Parser;
-use app\services\ItemParser;
+use app\services\ParserManager;
 use app\models\ParserFilterForm;
 
 class ParserController extends Controller
@@ -18,14 +17,23 @@ class ParserController extends Controller
 
         if ($request->isPost && $model->load($request->post())) {
             $cookieData = $model->getCookieData();
-            $parser = new Parser($cookieData);
-            $parser->run();
+            (new ParserManager())->start($cookieData);
+
+            $this->redirect('view');
         }
 
         return $this->render('index', ['model' => $model]);
     }
 
     public function actionView()
+    {
+        $isLoading = (new ParserManager())->isLoading();
+
+        return $this->render('view', ['isLoading' => $isLoading]);
+    }
+
+    /*
+    public function actionParse()
     {
         $url = __DIR__ . '/page.html';
         $content = file_get_contents($url);
@@ -105,5 +113,5 @@ class ParserController extends Controller
         print_r($table);
 
 
-    }
+    }*/
 }
