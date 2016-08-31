@@ -6,50 +6,17 @@ use app\models\ParserFilterForm;
 class Parser
 {
 	protected $data;
-	protected $items;
 
 	const URL_1 = 'http://public.fsa.gov.ru/table_rds_pub_ts/index.php';
-	const URL_2 = '';
+
 	const PAGE_LIMIT = 50;
 	const ITEM_REGEX = '/<tr id="id\_([^"]+)"/siU';
 	const CAPTCHA_REGEX = '"captcha\.php\?sid=\d+"';
-	const MAX_PAGE_ID = 100000;
-	const RESULT_CSV_PATH = 'csv/parsed.csv';
+	const MAX_PAGE_ID = 2;
 
-
-	public function __construct($data)
+	public function __construct($data = [])
 	{
 		$this->data = $data;
-		$this->items = [];
-		$this->initFile();
-	}
-
-	public function run()
-	{
-		$pageId = 0;
-		$page = [];
-
-		try {
-			while ($pageId < self::MAX_PAGE_ID) {
-				$content = $this->getListingPage($pageId);
-
-				foreach ($this->getPageItems($content) as $item) {
-					$this->items[] = $item[1];
-				}
-
-				$pageId++;				
-			}
-		} catch(\Exception $e) {
-			echo $e->getMessage();
-		}
-
-		if (sizeof($this->items) == 0) {
-			return;
-		}
-
-		foreach ($this->items as $itemId) {
-			$this->getViewPage($itemId);
-		}
 	}
 
 	public function getListingPage($pageId = 0)
@@ -79,34 +46,69 @@ class Parser
 			throw new \Exception('No items found');
 		}
 
-		return $matches;
+		return $matches[1];
+	}
+
+	public function getItemsByPageId($pageId)
+	{
+		$items = [];
+
+		try {
+			while ($pageId < self::MAX_PAGE_ID) {
+				$content = $this->getListingPage($pageId);
+
+				foreach ($this->getPageItems($content) as $item) {
+					$items[] = $item;
+				}
+
+				$pageId++;				
+			}
+		} catch(\Exception $e) {
+			return [];
+		}
+
+		if (sizeof($items) == 0) {
+			return [];
+		}
+
+		return $items;
 	}
 
 	public function getViewPage($itemId)
 	{
 		$curl = new \Curl\Curl();
-		$curl->get('http://188.254.71.82/rds_ts_pub/?show=view&id_object=' . $itemId);
+		$itemUrl = 'http://188.254.71.82/rds_ts_pub/?show=view&id_object=' . $itemId;
+		$curl->get($itemUrl);
+		$content = $curl->response;
+
+		echo 'GET Url: ' . $itemUrl . "\r\n";
 
 		$content = iconv('cp1251', 'utf-8', $curl->response);
 
 		if (preg_match_all(self::CAPTCHA_REGEX, $content, $captchaMatches)) {
-			$captchaUrl = 'http://188.254.71.82/rds_ts_pub/' . $captchaMatches[0];
-			$captchaCode = $this->getCaptchaCode($captchaUrl);
 
-			$curl = new \Curl\Curl();
-			$curl->post('http://188.254.71.82/rds_ts_pub/reg.php', [
+			$captchaUrl = 'http://188.254.71.82/rds_ts_pub/' . $captchaMatches[0][0];
+			$captchaCode = $this->getCaptchaCode($captchaUrl);
+			echo 'Url: ' . $captchaUrl . "\r\n";
+
+			$captchaUrl = 'http://188.254.71.82/rds_ts_pub/reg.php';
+			echo 'Url: ' . $captchaUrl . "\r\n";
+
+			$curl->post($captchaUrl, [
 					'captcha' => $captchaCode,
 				]);
 
-			$curl = new \Curl\Curl();
-			$curl->get('http://188.254.71.82/rds_ts_pub/?show=view&id_object=' . $itemId);
+
+			$curl->get($itemUrl);
 
 			$content = iconv('cp1251', 'utf-8', $curl->response);
 		}
 
+		echo "\r\n==============\r\n" . $content . "\r\n==============\r\n";
+
 		$data = $this->parseItemContent($content);
 
-		$this->writeData($data);
+		return $data;
 	}
 
 	public function parseItemContent($content)
@@ -116,18 +118,6 @@ class Parser
 		return $parser->getData();
 	}
 
-	public function initFile()
-	{
-		$handle = fopen(self::RESULT_CSV_PATH, "w+");
-		fclose($handle);
-	}
-
-	public function writeData($data)
-	{
-		$handle = fopen(self::RESULT_CSV_PATH, "a+");
-		fputscsv($handle, $data);
-		fclose($handle);	
-	}
 
 	public function getCaptchaCode($captchaUrl)
 	{

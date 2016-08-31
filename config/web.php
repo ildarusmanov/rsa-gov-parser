@@ -14,10 +14,6 @@ $config = [
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
-        'user' => [
-            'identityClass' => 'app\models\User',
-            'enableAutoLogin' => true,
-        ],
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
@@ -39,7 +35,7 @@ $config = [
         ],
         'parser' => [
             'class' => 'app\services\Parser',
-            'captchaParser' => 'app\services\CaptchaParser',
+            'captchaParser' => 'app\services\CaptchaRecognizer',
         ],
         'db' => require(__DIR__ . '/db.php'),
         /*
