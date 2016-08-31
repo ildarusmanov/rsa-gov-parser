@@ -10,7 +10,7 @@ class ParserManager
 	const STEP_LOAD_ITEMS = 300;
 	const STEP_FINISHED = 400;
 
-	const LOCK_FILE_PATH = __DIR__ . '/runtime/state/running.state';
+	const LOCK_FILE_PATH = __DIR__ . '/../runtime/state/running.state';
 
 	protected $state;
 
@@ -20,10 +20,14 @@ class ParserManager
 
 		$this->state->setStateParam('filter', $data);
 		$this->state->setStateParam('step', self::STEP_INIT);
-	}\
+
+		$this->unlock();
+	}
 
 	public function isLoading()
 	{
+		$this->loadState();
+
 		$step = $this->state->getStateParam('step');
 
 		if ($step == null || $step == self::STEP_FINISHED) {
@@ -39,7 +43,6 @@ class ParserManager
 			return;
 		}
 
-
 		$this->lock();
 
 		$this->loadState();
@@ -51,15 +54,11 @@ class ParserManager
 		}
 
 		if ($step == self::STEP_INIT) {
-			return $this->stepInit();
-		}
-
-		if ($step == self::STEP_LOAD_LISTING) {
-			return $this->stepLoadListing();
-		}
-
-		if ($step == self::STEP_LOAD_ITEMS) {
-			return $this->stepLoadItems();
+			$this->stepInit();
+		} elseif ($step == self::STEP_LOAD_LISTING) {
+			$this->stepLoadListing();
+		} elseif ($step == self::STEP_LOAD_ITEMS) {
+			$this->stepLoadItems();
 		}
 
 		$this->unlock();
@@ -101,7 +100,7 @@ class ParserManager
 
 		$parser = new Parser($filterData);
 
-		$newItems = $parser->getPageItems($pageId);
+		$newItems = $parser->getItemsByPageId($pageId);
 
 		if (sizeof($newItems) == 0) {
 			$this->state->setStateParam('step', self::STEP_LOAD_ITEMS);
@@ -140,11 +139,15 @@ class ParserManager
 
 	public function lock()
 	{
+		sleep(1);
+
 		touch(self::LOCK_FILE_PATH);
 	}
 
-	public+ function unlock()
+	public function unlock()
 	{
+		sleep(1);
+
 		if ($this->isLocked()) {
 			unlink(self::LOCK_FILE_PATH);
 		}

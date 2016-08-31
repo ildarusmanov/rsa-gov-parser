@@ -39,6 +39,11 @@ class ParserState
 
 	protected function load()
 	{
+		if (!file_exists(self::STATE_FILE_PATH)) {
+			$this->stateData = [];
+			return;
+		}
+
 		$data = file_get_contents(self::STATE_FILE_PATH);
 
 		if (empty($data)) {

@@ -12,7 +12,7 @@ class Parser
 	const PAGE_LIMIT = 50;
 	const ITEM_REGEX = '/<tr id="id\_([^"]+)"/siU';
 	const CAPTCHA_REGEX = '"captcha\.php\?sid=\d+"';
-	const MAX_PAGE_ID = 1;
+	const MAX_PAGE_ID = 5;
 
 	public function __construct($data = [])
 	{
@@ -49,7 +49,7 @@ class Parser
 		return $matches;
 	}
 
-	public function getPageItems($pageId)
+	public function getItemsByPageId($pageId)
 	{
 		try {
 			while ($pageId < self::MAX_PAGE_ID) {

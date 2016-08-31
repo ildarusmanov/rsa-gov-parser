@@ -19,7 +19,7 @@ class ParserController extends Controller
             $cookieData = $model->getCookieData();
             (new ParserManager())->start($cookieData);
 
-            $this->redirect('view');
+            return $this->redirect(['view']);
         }
 
         return $this->render('index', ['model' => $model]);

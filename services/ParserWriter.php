@@ -3,7 +3,7 @@ namespace app\services;
 
 class ParserWriter
 {
-	const RESULT_CSV_PATH = __DIR__ . '../web/csv/parsed.csv';
+	const RESULT_CSV_PATH = __DIR__ . '/../web/csv/parsed.csv';
 
 	public function resetFile()
 	{
