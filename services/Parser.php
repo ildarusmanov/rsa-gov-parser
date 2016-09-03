@@ -92,14 +92,17 @@ class Parser
 		if (preg_match_all(self::CAPTCHA_REGEX, $content, $captchaMatches)) {
 
 			$captchaUrl = 'http://188.254.71.82/rds_ts_pub/' . $captchaMatches[0][0];
-			$captchaCode = $this->getCaptchaCode($captchaUrl);
+
+			$curl->get($captchaUrl);
+			$captchaCode = $this->getCaptchaCode($curl->response);
+
 			echo 'Url: ' . $captchaUrl . "\r\n";
 
-			$captchaUrl = 'http://188.254.71.82/rds_ts_pub/reg.php';
-			echo 'Url: ' . $captchaUrl . "\r\n";
+			$captchaRegUrl = 'http://188.254.71.82/rds_ts_pub/reg.php';
+			echo 'Url: ' . $captchaRegUrl . "\r\n";
 
 			$curl->setHeader('Referer', 'http://188.254.71.82/rds_ts_pub', $itemUrl);
-			$curl->post($captchaUrl, [
+			$curl->post($captchaRegUrl, [
 					'captcha' => $captchaCode,
 				]);
 
@@ -138,13 +141,13 @@ class Parser
 	}
 
 
-	public function getCaptchaCode($captchaUrl)
+	public function getCaptchaCode($captchaData)
 	{
 		$captchaRecognizer = new CaptchaRecognizer();
 
-		$fileContent = file_get_contents($captchaUrl);
+		//$fileContent = file_get_contents($captchaUrl);
 
-		return $captchaRecognizer->getCode($fileContent);
+		return $captchaRecognizer->getCode($captchaData);
 	}
 
 	protected function getResponseHeader($header, $headers) {
