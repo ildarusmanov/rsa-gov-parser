@@ -46,7 +46,7 @@ class CaptchaRecognizer
 	    }
 
     	$header="POST /in.php HTTP/1.0\r\n";
-    	$header.="Host: $sendhost\r\n";
+    	$header.="Host: " . $this->sendhost . "\r\n";
     	$header.="Content-Type: application/x-www-form-urlencoded\r\n";
     	$header.="Content-Length: ".strlen($poststr)."\r\n";
     	$header.="\r\n$poststr\r\n";
