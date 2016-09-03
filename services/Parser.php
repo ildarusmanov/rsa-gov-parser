@@ -100,7 +100,7 @@ class Parser
 
 			print_r($curl->response_headers);
 			echo "\r\n";
-			
+
 			$cookies = $this->getResponseHeader('Set-Cookie', $curl->response_headers);
 
 			if ($cookies) {
@@ -110,6 +110,9 @@ class Parser
 				}
 			}
 
+			print_r($cookies);
+			echo "\r\n";
+			
 			$curl->get($itemUrl);
 
 			$content = iconv('cp1251', 'utf-8', $curl->response);
