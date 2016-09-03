@@ -80,6 +80,7 @@ class Parser
 		$userAgent = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:48.0) Gecko/20100101 Firefox/48.0';
 		$curl->setHeader('User-Agent', $userAgent);
 		$curl->setHeader('Referer', 'http://188.254.71.82/rds_ts_pub');
+		$curl->setCookie('session_public', '83fdf14a5cfbda7e8075a47697f26160');
 
 		$itemUrl = 'http://188.254.71.82/rds_ts_pub/?show=view&id_object=' . $itemId;
 		$curl->get($itemUrl);
