@@ -3,7 +3,7 @@ namespace app\models;
 
 class ParserState
 {
-	const STATE_FILE_PATH = __DIR__ . '/../runtime/state/parser_state.data';
+	const STATE_FILE_PATH = '/../runtime/state/parser_state.data';
 
 	protected $stateData = [];
 
@@ -32,14 +32,14 @@ class ParserState
 
 	protected function save()
 	{
-		$fp = fopen(self::STATE_FILE_PATH, "w+");
+		$fp = fopen(__DIR__ . self::STATE_FILE_PATH, "w+");
 		fwrite($fp, serialize($this->stateData));
 		fclose($fp);
 	}
 
 	protected function load()
 	{
-		if (!file_exists(self::STATE_FILE_PATH)) {
+		if (!file_exists(__DIR__ . self::STATE_FILE_PATH)) {
 			$this->stateData = [];
 			return;
 		}
