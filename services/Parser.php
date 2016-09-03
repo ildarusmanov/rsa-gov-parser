@@ -93,6 +93,7 @@ class Parser
 
 			$captchaUrl = 'http://188.254.71.82/rds_ts_pub/' . $captchaMatches[0][0];
 
+			$curl->setHeader('Referer', $itemUrl);
 			$curl->get($captchaUrl);
 			$captchaCode = $this->getCaptchaCode($curl->response);
 
@@ -101,7 +102,7 @@ class Parser
 			$captchaRegUrl = 'http://188.254.71.82/rds_ts_pub/reg.php';
 			echo 'Url: ' . $captchaRegUrl . "\r\n";
 
-			$curl->setHeader('Referer', 'http://188.254.71.82/rds_ts_pub', $itemUrl);
+			$curl->setHeader('Referer', $itemUrl);
 			$curl->post($captchaRegUrl, [
 					'captcha' => $captchaCode,
 				]);
