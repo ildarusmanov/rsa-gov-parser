@@ -98,12 +98,12 @@ class Parser
 					'captcha' => $captchaCode,
 				]);
 
-			$headers = http_parse_headers($curl->response_headers);
+			$cookies = $this->getResponseHeader('Set-Cookie', $curl->response_headers);
 
-			if (isset($headers['Set-Cookie'])) {
-				foreach ($headers['Set-Cookie'] as $cookie) {
-					$parts = explode('=', $cookie);
-					$curl->setCookie($parts[0], $parts[1]);
+			if ($cookies) {
+				$cookies = $this->parseCookies($cookies);
+				foreach ($cookies as $k => $v) {
+					$curl->setCookie($k, $v);
 				}
 			}
 
@@ -134,5 +134,26 @@ class Parser
 		$fileContent = file_get_contents($captchaUrl);
 
 		return $captchaRecognizer->getCode($fileContent);
+	}
+
+	protected function getResponseHeader($name, $headers) {
+	  foreach ($headers as $key => $r) {
+	     if (stripos($r, $header) !== FALSE) {
+	        list($headername, $headervalue) = explode(":", $r, 2);
+	        return trim($headervalue);
+	     }
+	  }
+	}
+
+	protected function parseCookies($str)
+	{
+		$cookies = [];
+
+		foreach(explode('; ',$str) as $k => $v){
+            preg_match('/^(.*?)=(.*?)$/i',trim($v),$matches);
+            $cookies[trim($matches[1])] = urldecode($matches[2]);
+        }
+
+        return $cookies;
 	}
 }
