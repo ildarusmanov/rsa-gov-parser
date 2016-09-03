@@ -10,7 +10,7 @@ class ParserManager
 	const STEP_LOAD_ITEMS = 300;
 	const STEP_FINISHED = 400;
 
-	const LOCK_FILE_PATH = __DIR__ . '/../runtime/state/running.state';
+	const LOCK_FILE_PATH = '/../runtime/state/running.state';
 
 	protected $state;
 
@@ -152,7 +152,7 @@ class ParserManager
 	{
 		$this->log('Check is locked?');
 
-		return file_exists(self::LOCK_FILE_PATH);
+		return file_exists(__DIR__ . self::LOCK_FILE_PATH);
 	}
 
 	public function lock()
@@ -161,7 +161,7 @@ class ParserManager
 
 		sleep(1);
 
-		touch(self::LOCK_FILE_PATH);
+		touch(__DIR__ . self::LOCK_FILE_PATH);
 	}
 
 	public function unlock()
@@ -171,7 +171,7 @@ class ParserManager
 		sleep(1);
 
 		if ($this->isLocked()) {
-			unlink(self::LOCK_FILE_PATH);
+			unlink(__DIR__ . self::LOCK_FILE_PATH);
 		}
 	}
 
