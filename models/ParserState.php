@@ -44,7 +44,7 @@ class ParserState
 			return;
 		}
 
-		$data = file_get_contents(self::STATE_FILE_PATH);
+		$data = file_get_contents(__DIR__ . self::STATE_FILE_PATH);
 
 		if (empty($data)) {
 			return;
