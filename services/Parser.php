@@ -98,9 +98,14 @@ class Parser
 					'captcha' => $captchaCode,
 				]);
 
-			print_r($curl->response_headers);
-			echo "\r\n";
+			$headers = http_parse_headers($curl->response_headers);
 
+			if (isset($headers['Set-Cookie'])) {
+				foreach ($headers['Set-Cookie'] as $cookie) {
+					$parts = explode('=', $cookie);
+					$curl->setCookie($parts[0], $parts[1]);
+				}
+			}
 
 			$curl->get($itemUrl);
 
