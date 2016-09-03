@@ -98,6 +98,9 @@ class Parser
 					'captcha' => $captchaCode,
 				]);
 
+			print_r($curl->response_headers);
+			echo "\r\n";
+			
 			$cookies = $this->getResponseHeader('Set-Cookie', $curl->response_headers);
 
 			if ($cookies) {
