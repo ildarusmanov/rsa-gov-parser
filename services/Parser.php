@@ -121,8 +121,8 @@ class Parser
 
 	public function getCaptchaCode($captchaUrl)
 	{
-		$captchaRecognizer = new captchaRecognizer();
-		
+		$captchaRecognizer = new CaptchaRecognizer();
+
 		$fileContent = file_get_contents($captchaUrl);
 
 		return $captchaRecognizer->getCode($fileContent);
