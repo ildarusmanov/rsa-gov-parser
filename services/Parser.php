@@ -136,7 +136,7 @@ class Parser
 		return $captchaRecognizer->getCode($fileContent);
 	}
 
-	protected function getResponseHeader($name, $headers) {
+	protected function getResponseHeader($header, $headers) {
 	  foreach ($headers as $key => $r) {
 	     if (stripos($r, $header) !== FALSE) {
 	        list($headername, $headervalue) = explode(":", $r, 2);
