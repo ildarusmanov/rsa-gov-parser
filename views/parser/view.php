@@ -1,10 +1,13 @@
 <?php
+use yii\helpers\Url;
+
 $this->title = 'Парсинг';
 ?>
 
 <?php if ($isLoading): ?>
 	<h1>Пожалуйста подождите</h1>
 	<p>Выполняется обработка данных</p>
+	<a href="<?= Url::toRoute(['stop']) ?>" class="btn btn-lg btn-danger">Отменить</a>
 	<script type="text/javascript">
 		setTimeout(function(){
 			window.location.reload();

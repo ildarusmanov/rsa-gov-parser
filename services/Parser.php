@@ -1,6 +1,7 @@
 <?php
 namespace app\services;
 
+use GuzzleHttp\Client;
 use app\models\ParserFilterForm;
 
 class Parser
@@ -76,56 +77,42 @@ class Parser
 
 	public function getViewPage($itemId)
 	{
-		$curl = new \Curl\Curl();
-		$userAgent = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:48.0) Gecko/20100101 Firefox/48.0';
-		$curl->setHeader('User-Agent', $userAgent);
-		$curl->setHeader('Referer', 'http://188.254.71.82/rds_ts_pub');
-		$curl->setCookie('session_public', '83fdf14a5cfbda7e8075a47697f26160');
+		$baseUrl = 'http://188.254.71.82/rds_ts_pub/';
 
-		$itemUrl = 'http://188.254.71.82/rds_ts_pub/?show=view&id_object=' . $itemId;
-		$curl->get($itemUrl);
-		$content = $curl->response;
+		$itemUrl = $baseUrl . '?show=view&id_object=' . $itemId;
 
-		echo 'GET Url: ' . $itemUrl . "\r\n";
+		$client = new Client([
+		    'base_uri' => $baseUrl,
+		    'timeout'  => 15.0,
+		]);
 
-		$content = iconv('cp1251', 'utf-8', $curl->response);
+		$response = $client->request('GET', $itemUrl);
+
+		$content = iconv('cp1251', 'utf-8', $response->getBody());
 
 		if (preg_match_all(self::CAPTCHA_REGEX, $content, $captchaMatches)) {
 
 			$captchaUrl = 'http://188.254.71.82/rds_ts_pub/' . $captchaMatches[0][0];
+			
+			$captchaPath = __DIR__ . '/../runtime/state/captcha.jpg';
+			$response = $client->request('GET', $captchaUrl, ['sink' => $captchaPath]);
+			$captchaData = file_get_contents($captchaPath);
+			unlink($captchaPath);
+			$captchaCode = $this->getCaptchaCode($captchaData);
 
-			$curl->setHeader('Referer', $itemUrl);
-			$curl->get($captchaUrl);
-			$captchaCode = $this->getCaptchaCode($curl->response);
-
+			echo $captchaData;
 			echo 'Url: ' . $captchaUrl . "\r\n";
+			echo 'Code: ' . $captchaCode . "\r\n";
 
-			$captchaRegUrl = 'http://188.254.71.82/rds_ts_pub/reg.php';
+			$captchaRegUrl = $baseUrl . 'reg.php';
 			echo 'Url: ' . $captchaRegUrl . "\r\n";
+			$response = $client->post($captchaRegUrl, [
+				//'allow_redirects' => true,
+				'decode_content' => false,
+				'form_params' => ['captcha' => $captchaCode],
+			]);
 
-			$curl->setHeader('Referer', $itemUrl);
-			$curl->post($captchaRegUrl, [
-					'captcha' => $captchaCode,
-				]);
-
-			print_r($curl->response_headers);
-			echo "\r\n";
-
-			$cookies = $this->getResponseHeader('Set-Cookie', $curl->response_headers);
-
-			if ($cookies) {
-				$cookies = $this->parseCookies($cookies);
-				foreach ($cookies as $k => $v) {
-					$curl->setCookie($k, $v);
-				}
-			}
-
-			print_r($cookies);
-			echo "\r\n";
-
-			$curl->get($itemUrl);
-
-			$content = iconv('cp1251', 'utf-8', $curl->response);
+			$content = iconv('cp1251', 'utf-8', $response->getBody());
 		}
 
 		echo "\r\n==============\r\n" . $content . "\r\n==============\r\n";
@@ -150,26 +137,5 @@ class Parser
 		//$fileContent = file_get_contents($captchaUrl);
 
 		return $captchaRecognizer->getCode($captchaData);
-	}
-
-	protected function getResponseHeader($header, $headers) {
-	  foreach ($headers as $key => $r) {
-	     if (stripos($r, $header) !== FALSE) {
-	        list($headername, $headervalue) = explode(":", $r, 2);
-	        return trim($headervalue);
-	     }
-	  }
-	}
-
-	protected function parseCookies($str)
-	{
-		$cookies = [];
-
-		foreach(explode('; ',$str) as $k => $v){
-            preg_match('/^(.*?)=(.*?)$/i',trim($v),$matches);
-            $cookies[trim($matches[1])] = urldecode($matches[2]);
-        }
-
-        return $cookies;
 	}
 }

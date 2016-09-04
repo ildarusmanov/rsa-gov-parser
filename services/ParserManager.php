@@ -148,6 +148,14 @@ class ParserManager
 		}
 	}
 
+	public function stop()
+	{
+		$this->state->setStateParam('step', null);
+		$this->state->setStateParam('items', []);
+		$this->state->setStateParam('pageId', 0);
+		$this->unlock();
+	}
+
 	public function isLocked()
 	{
 		$this->log('Check is locked?');
