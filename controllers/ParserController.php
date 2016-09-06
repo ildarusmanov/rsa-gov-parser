@@ -34,7 +34,7 @@ class ParserController extends Controller
         $manager = new ParserManager();
 
         $isLoading = $manager->isLoading();
-        $stepTitle = $manager->stepTitle();
+        $stepTitle = $manager->getStepTitle();
 
         return $this->render('view', [
             'isLoading' => $isLoading,
