@@ -14,7 +14,7 @@ class ParserController extends Controller
         if ((new ParserManager())->isLoading()) {
             return $this->redirect(['view']);
         }
-        
+
         $request = \Yii::$app->request;
 
         $model = new ParserFilterForm();
@@ -31,9 +31,15 @@ class ParserController extends Controller
 
     public function actionView()
     {
-        $isLoading = (new ParserManager())->isLoading();
+        $manager = new ParserManager();
 
-        return $this->render('view', ['isLoading' => $isLoading]);
+        $isLoading = $manager->isLoading();
+        $stepTitle = $manager->stepTitle();
+
+        return $this->render('view', [
+            'isLoading' => $isLoading,
+            'stepTitle' => $stepTitle,
+        ]);
     }
 
     public function actionStop()
@@ -83,12 +89,12 @@ class ParserController extends Controller
 
             foreach ($stepElements as $el) {
                 $class = $el->attributes->getNamedItem('class')->value;
-                
+
                 foreach ($types as $typeName => $typeClass) {
                     if (strpos($class, $typeClass) !== FALSE) {
                         $type = $typeName;
                         continue;
-                    }           
+                    }
                 }
 
                 if ($type == 'Label') {

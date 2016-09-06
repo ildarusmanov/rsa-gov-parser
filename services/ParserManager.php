@@ -5,198 +5,234 @@ use app\models\ParserState;
 
 class ParserManager
 {
-	const STEP_INIT = 100;
-	const STEP_LOAD_LISTING = 200;
-	const STEP_LOAD_ITEMS = 300;
-	const STEP_FINISHED = 400;
+    const STEP_INIT = 100;
+    const STEP_LOAD_LISTING = 200;
+    const STEP_LOAD_ITEMS = 300;
+    const STEP_FINISHED = 400;
 
-	const LOCK_FILE_PATH = '/../runtime/state/running.state';
+    const LOCK_FILE_PATH = '/../runtime/state/running.state';
 
-	protected $state;
+    protected $state;
 
-	public function start($data)
-	{
-		$this->loadState();
+    public function start($data)
+    {
+        $this->loadState();
 
-		$this->state->setStateParam('filter', $data);
-		$this->state->setStateParam('step', self::STEP_INIT);
+        $this->state->setStateParam('filter', $data);
+        $this->state->setStateParam('step', self::STEP_INIT);
 
-		$this->unlock();
-	}
+        $this->unlock();
+    }
 
-	public function isLoading()
-	{
-		$this->loadState();
+    public function isLoading()
+    {
+        $this->loadState();
 
-		$step = $this->state->getStateParam('step');
+        $step = $this->state->getStateParam('step');
 
-		if ($step == null || $step == self::STEP_FINISHED) {
-			return false;
-		}
+        if ($step == null || $step == self::STEP_FINISHED) {
+            return false;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	public function run()
-	{
-		$this->log('Start parser...');
+    public function run()
+    {
+        $this->log('Start parser...');
 
-		if ($this->isLocked()) {
-			return;
-		}
+        if ($this->isLocked()) {
+            return;
+        }
 
-		$this->lock();
+        $this->lock();
 
-		$this->loadState();
+        $this->loadState();
 
-		$step = $this->state->getStateParam('step');
+        $step = $this->state->getStateParam('step');
 
-		if ($step == null || $step == self::STEP_FINISHED) {
-			return;
-		}
+        if ($step == null || $step == self::STEP_FINISHED) {
+            return;
+        }
 
-		if ($step == self::STEP_INIT) {
-			$this->stepInit();
-		} elseif ($step == self::STEP_LOAD_LISTING) {
-			$this->stepLoadListing();
-		} elseif ($step == self::STEP_LOAD_ITEMS) {
-			$this->stepLoadItems();
-		}
+        if ($step == self::STEP_INIT) {
+            $this->stepInit();
+        } elseif ($step == self::STEP_LOAD_LISTING) {
+            $this->stepLoadListing();
+        } elseif ($step == self::STEP_LOAD_ITEMS) {
+            $this->stepLoadItems();
+        }
 
-		$this->unlock();
-	}
+        $this->unlock();
+    }
 
-	protected function loadState()
-	{
-		$this->log('Load state');
+    public function getStepTitle()
+    {
+        $stepId = $this->getStepId();
 
-		$this->state = new ParserState();
+        if ($stepId == null) {
+            return;
+        }
 
-		return $this;
-	}
+        $list = $this->getStepsTitles();
 
-	protected function stepInit()
-	{
-		$this->log('Initial step');
+        if (isset($list[$stepId])) {
+            return $list[$stepId];
+        }
 
-		$filterData = $this->state->getStateParam('filter');
+        return;
+    }
 
-		if ($filterData == null) {
-			$this->state->setStateParam('step', null);
-			return;
-		}
+    protected function getStepId()
+    {
+        $this->loadState();
 
-		(new ParserWriter)->resetFile();
+        return $this->state->getStateParam('step');
+    }
 
-		$this->state->setStateParam('pageId', 0);
-		$this->state->setStateParam('step', self::STEP_LOAD_LISTING);
-	}
+    protected function getStepsTitles()
+    {
+        return [
+            self::STEP_INIT => 'Инициализация',
+            self::STEP_LOAD_LISTING => 'Загрузка списка',
+            self::STEP_LOAD_ITEMS => 'Обработка полученных данных',
+            self::STEP_FINISHED => 'Готово',
+        ];
+    }
 
-	protected function stepLoadListing()
-	{
-		$this->log('Load listing');
+    protected function loadState()
+    {
+        $this->log('Load state');
 
-		$items = $this->state->getStateParam('items');
+        $this->state = new ParserState();
 
-		if ($items == null) {
-			$items = [];
-		}
+        return $this;
+    }
 
-		$filterData = $this->state->getStateParam('filter');
+    protected function stepInit()
+    {
+        $this->log('Initial step');
 
-		$pageId = $this->state->getStateParam('pageId');
+        $filterData = $this->state->getStateParam('filter');
 
-		$this->log('Load page #' . $pageId);
+        if ($filterData == null) {
+            $this->state->setStateParam('step', null);
 
-		$parser = new Parser($filterData);
+            return;
+        }
 
-		$newItems = $parser->getItemsByPageId($pageId);
+        (new ParserWriter())->resetFile();
 
-		$this->log(sizeof($newItems) . ' items parsed');
+        $this->state->setStateParam('pageId', 0);
+        $this->state->setStateParam('step', self::STEP_LOAD_LISTING);
+    }
 
-		if (sizeof($newItems) == 0) {
-			$this->state->setStateParam('step', self::STEP_LOAD_ITEMS);
-			$this->state->setStateParam('pageId', 0);
-			return;
-		}
+    protected function stepLoadListing()
+    {
+        $this->log('Load listing');
 
-		$items = array_merge($items, $newItems);
+        $items = $this->state->getStateParam('items');
 
-		$pageId++;
+        if ($items == null) {
+            $items = [];
+        }
 
-		$this->state->setStateParam('pageId', $pageId);
-		$this->state->setStateParam('items', $items);
-	}
+        $filterData = $this->state->getStateParam('filter');
 
-	protected function stepLoadItems()
-	{
-		$this->log('Load items');
+        $pageId = $this->state->getStateParam('pageId');
 
-		$items = $this->state->getStateParam('items');
+        $this->log('Load page #' . $pageId);
 
-		$itemId = array_pop($items);
+        $parser = new Parser($filterData);
 
-		$this->log('Parse item #' . $itemId);
-		
-		$this->parseItem($itemId);
+        $newItems = $parser->getItemsByPageId($pageId);
 
-		$this->state->setStateParam('items', $items);
+        $this->log(sizeof($newItems) . ' items parsed');
 
-		if (sizeof($items) == 0) {
-			$this->state->setStateParam('step', self::STEP_FINISHED);
-			return;
-		}
-	}
+        if (sizeof($newItems) == 0) {
+            $this->state->setStateParam('step', self::STEP_LOAD_ITEMS);
+            $this->state->setStateParam('pageId', 0);
 
-	public function stop()
-	{
-		$this->state->setStateParam('step', null);
-		$this->state->setStateParam('items', []);
-		$this->state->setStateParam('pageId', 0);
-		$this->unlock();
-	}
+            return;
+        }
 
-	public function isLocked()
-	{
-		$this->log('Check is locked?');
+        $items = array_merge($items, $newItems);
 
-		return file_exists(__DIR__ . self::LOCK_FILE_PATH);
-	}
+        $pageId++;
 
-	public function lock()
-	{
-		$this->log('Locks');
+        $this->state->setStateParam('pageId', $pageId);
+        $this->state->setStateParam('items', $items);
+    }
 
-		sleep(1);
+    protected function stepLoadItems()
+    {
+        $this->log('Load items');
 
-		touch(__DIR__ . self::LOCK_FILE_PATH);
-	}
+        $items = $this->state->getStateParam('items');
 
-	public function unlock()
-	{
-		$this->log('Unlock');
+        $itemId = array_pop($items);
 
-		sleep(1);
+        $this->log('Parse item #' . $itemId);
 
-		if ($this->isLocked()) {
-			unlink(__DIR__ . self::LOCK_FILE_PATH);
-		}
-	}
+        $this->parseItem($itemId);
 
-	protected function parseItem($itemId)
-	{
-		$this->log('Parse item id = ' . $itemId);
+        $this->state->setStateParam('items', $items);
 
-		$parsedData = (new Parser())->getViewPage($itemId);
+        if (sizeof($items) == 0) {
+            $this->state->setStateParam('step', self::STEP_FINISHED);
 
-		$converter = new ItemDataConverter($parsedData);
+            return;
+        }
+    }
 
-		(new ParserWriter())->write($converter->getData());
-	}
+    public function stop()
+    {
+        $this->state->setStateParam('step', null);
+        $this->state->setStateParam('items', []);
+        $this->state->setStateParam('pageId', 0);
+        $this->unlock();
+    }
 
-	protected function log($msg, $type = 'info')
-	{
-		echo '[' . $type . ']: ' . $msg  . "\r\n";
+    public function isLocked()
+    {
+        $this->log('Check is locked?');
 
-	}
+        return file_exists(__DIR__ . self::LOCK_FILE_PATH);
+    }
+
+    public function lock()
+    {
+        $this->log('Locks');
+
+        sleep(1);
+
+        touch(__DIR__ . self::LOCK_FILE_PATH);
+    }
+
+    public function unlock()
+    {
+        $this->log('Unlock');
+
+        sleep(1);
+
+        if ($this->isLocked()) {
+            unlink(__DIR__ . self::LOCK_FILE_PATH);
+        }
+    }
+
+    protected function parseItem($itemId)
+    {
+        $this->log('Parse item id = ' . $itemId);
+
+        $parsedData = (new Parser())->getViewPage($itemId);
+
+        $converter = new ItemDataConverter($parsedData);
+
+        (new ParserWriter())->write($converter->getData());
+    }
+
+    protected function log($msg, $type = 'info')
+    {
+        \Yii::trace('[' . $type . ']: ' . $msg);
+    }
 }
