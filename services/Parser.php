@@ -83,6 +83,7 @@ class Parser
         $client = new Client([
             'base_uri' => $baseUrl,
             'timeout'  => 15.0,
+            'cookies' => true,
         ]);
 
         $response = $client->request('GET', $itemUrl);
@@ -91,29 +92,26 @@ class Parser
 
         if (preg_match_all(self::CAPTCHA_REGEX, $content, $captchaMatches)) {
             $captchaUrl = 'http://188.254.71.82/rds_ts_pub/' . $captchaMatches[0][0];
-
+            //$captchaData = file_get_contents($captchaUrl);
             $captchaPath = __DIR__ . '/../runtime/state/captcha.png';
             $response = $client->request('GET', $captchaUrl, ['sink' => $captchaPath]);
             $captchaData = file_get_contents($captchaPath);
             unlink($captchaPath);
+
             $captchaCode = $this->getCaptchaCode($captchaData);
 
-            echo $captchaData;
-            echo 'Url: ' . $captchaUrl . "\r\n";
-            echo 'Code: ' . $captchaCode . "\r\n";
-
             $captchaRegUrl = $baseUrl . 'reg.php';
-            echo 'Url: ' . $captchaRegUrl . "\r\n";
-            $response = $client->post($captchaRegUrl, [
+
+            $response = $client->request('POST', $captchaRegUrl, [
                 'allow_redirects' => true,
                 'decode_content' => false,
                 'form_params' => ['captcha' => $captchaCode],
+                'debug' => true,
+                'headers' => ['Referer' => $itemUrl],
             ]);
 
             $content = iconv('cp1251', 'utf-8', $response->getBody());
         }
-
-        echo "\r\n==============\r\n" . $content . "\r\n==============\r\n";
 
         $data = $this->parseItemContent($content);
 

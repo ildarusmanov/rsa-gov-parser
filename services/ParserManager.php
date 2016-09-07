@@ -233,6 +233,6 @@ class ParserManager
 
     protected function log($msg, $type = 'info')
     {
-        \Yii::trace('[' . $type . ']: ' . $msg);
+        echo '[' . $type . ']: ' . $msg . "\r\n";
     }
 }
