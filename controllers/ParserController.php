@@ -11,7 +11,8 @@ class ParserController extends Controller
 {
     public function actionIndex()
     {
-        if ((new ParserManager())->isLoading()) {
+        $manager = new ParserManager();
+        if ($manager->isLoading() || $manager->isFinished()) {
             return $this->redirect(['view']);
         }
 
@@ -34,10 +35,12 @@ class ParserController extends Controller
         $manager = new ParserManager();
 
         $isLoading = $manager->isLoading();
+        $isFinished = $manager->isFinished();
         $stepTitle = $manager->getStepTitle();
 
         return $this->render('view', [
             'isLoading' => $isLoading,
+            'isFinished' => $isFinished,
             'stepTitle' => $stepTitle,
         ]);
     }
@@ -45,8 +48,10 @@ class ParserController extends Controller
     public function actionStop()
     {
         $manager = new ParserManager();
-        $isLoading = $manager->isLoading();
-        if ($isLoading) {
+
+        if ($manager->isLoading()
+            || $manager->isFinished()
+        ) {
             $manager->stop();
         }
 

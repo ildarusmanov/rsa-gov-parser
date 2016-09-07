@@ -16,4 +16,5 @@ $this->title = 'Парсинг';
 <?php else: ?>
 	<h1>Результат</h1>
 	<a href="./csv/parsed.csv" target="_blank" class="btn btn-success btn-lg">Скачать</a>
+	<a href="<?= Url::toRoute(['stop']) ?>" class="btn btn-lg btn-danger">Отменить</a>
 <?php endif; ?>

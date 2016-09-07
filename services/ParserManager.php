@@ -37,6 +37,15 @@ class ParserManager
         return true;
     }
 
+    public function isFinished()
+    {
+        $this->loadState();
+
+        $step = $this->state->getStateParam('step');
+
+        return $step == self::STEP_FINISHED;
+    }
+
     public function run()
     {
         $this->log('Start parser...');
