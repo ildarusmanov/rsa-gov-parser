@@ -7,8 +7,6 @@ class Parser
 {
     protected $data;
 
-    const URL_1 = 'http://public.fsa.gov.ru/table_rds_pub_ts/index.php';
-
     const PAGE_LIMIT = 50;
     const ITEM_REGEX = '/<tr id="id\_([^"]+)"/siU';
     const CAPTCHA_REGEX = '"captcha\.php\?sid=\d+"';
@@ -21,23 +19,33 @@ class Parser
 
     public function getListingPage($pageId = 0)
     {
-        $curl = new \Curl\Curl();
-        $curl->setUserAgent('');
-        $curl->setReferrer('');
+        $baseUrl = 'http://public.fsa.gov.ru/table_rds_pub_ts/index.php';
 
-        $curl->setCookie('page_byid_', self::PAGE_LIMIT);
+        $cookieData = $this->data;
+        $cookieData['page_byid_'] = self::PAGE_LIMIT;
 
-        foreach ($this->data as $key => $value) {
-            $curl->setCookie($key, $value);
-        }
+        $cookiesJar = \GuzzleHttp\Cookie\CookieJar::fromArray($cookieData, 'public.fsa.gov.ru');
 
-        $curl->post(self::URL_1, ['ajax' => 'main', 'action' => 'search', 'pageGoid' => $pageId, 'page_noid_' => $pageId]);
+        $client = new Client([
+            'base_uri' => $baseUrl,
+            'timeout'  => 15.0,
+            'cookies' => true,
+        ]);
 
-        if ($curl->error) {
-            throw new \Exception('Can not load page');
-        }
+        $response = $client->request('POST', $baseUrl, [
+            'allow_redirects' => true,
+            //'decode_content' => false,
+            'form_params' => [
+                'ajax' => 'main',
+                'action' => 'search',
+                'pageGoid' => $pageId,
+                'page_noid_' => $pageId,
+            ],
+            'cookies' => $cookiesJar,
 
-        return iconv('cp1251', 'utf-8', $curl->response);
+        ]);
+
+        return iconv('cp1251', 'utf-8', $response->getBody());
     }
 
     public function getPageItems($content)
