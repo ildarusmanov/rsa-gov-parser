@@ -11,10 +11,11 @@ class ParserController extends Controller
 {
     public function actionIndex()
     {
-        if ((new ParserManager())->isLoading()) {
+        $manager = new ParserManager();
+        if ($manager->isLoading() || $manager->isFinished()) {
             return $this->redirect(['view']);
         }
-        
+
         $request = \Yii::$app->request;
 
         $model = new ParserFilterForm();
@@ -31,16 +32,26 @@ class ParserController extends Controller
 
     public function actionView()
     {
-        $isLoading = (new ParserManager())->isLoading();
+        $manager = new ParserManager();
 
-        return $this->render('view', ['isLoading' => $isLoading]);
+        $isLoading = $manager->isLoading();
+        $isFinished = $manager->isFinished();
+        $stepTitle = $manager->getStepTitle();
+
+        return $this->render('view', [
+            'isLoading' => $isLoading,
+            'isFinished' => $isFinished,
+            'stepTitle' => $stepTitle,
+        ]);
     }
 
     public function actionStop()
     {
         $manager = new ParserManager();
-        $isLoading = $manager->isLoading();
-        if ($isLoading) {
+
+        if ($manager->isLoading()
+            || $manager->isFinished()
+        ) {
             $manager->stop();
         }
 
@@ -83,12 +94,12 @@ class ParserController extends Controller
 
             foreach ($stepElements as $el) {
                 $class = $el->attributes->getNamedItem('class')->value;
-                
+
                 foreach ($types as $typeName => $typeClass) {
                     if (strpos($class, $typeClass) !== FALSE) {
                         $type = $typeName;
                         continue;
-                    }           
+                    }
                 }
 
                 if ($type == 'Label') {

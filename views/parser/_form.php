@@ -1,6 +1,7 @@
 <?php
 use yii\helpers\Html;
 use yii\bootstrap\ActiveForm;
+use dosamigos\datepicker\DatePicker;
 
 ?>
 
@@ -10,20 +11,52 @@ use yii\bootstrap\ActiveForm;
 
     <div class="row">
         <div class="col-md-6">
-            <?= $form->field($model, 'vDateFrom') ?>
+            <?= $form->field($model, 'vDateFrom')
+                ->widget(
+                    DatePicker::className(), [
+                        'inline' => false,
+                        'clientOptions' => [
+                            'autoclose' => true,
+                            'format' => 'dd.mm.yyyy',
+                        ],
+                ]); ?>
         </div>
         <div class="col-md-6">
-            <?= $form->field($model, 'vDateTo') ?>
+            <?= $form->field($model, 'vDateTo')
+                ->widget(
+                    DatePicker::className(), [
+                        'inline' => false,
+                        'clientOptions' => [
+                            'autoclose' => true,
+                            'format' => 'dd.mm.yyyy',
+                        ],
+                ]);?>
         </div>
     </div>
 
 
     <div class="row">
         <div class="col-md-6">
-            <?= $form->field($model, 'sDateFrom') ?>
+            <?= $form->field($model, 'sDateFrom')
+                ->widget(
+                    DatePicker::className(), [
+                        'inline' => false,
+                        'clientOptions' => [
+                            'autoclose' => true,
+                            'format' => 'dd.mm.yyyy',
+                        ],
+                ]);?>
         </div>
         <div class="col-md-6">
-            <?= $form->field($model, 'sDateTo') ?>
+            <?= $form->field($model, 'sDateTo')
+                ->widget(
+                    DatePicker::className(), [
+                        'inline' => false,
+                        'clientOptions' => [
+                            'autoclose' => true,
+                            'format' => 'dd.mm.yyyy',
+                        ],
+                ]);?>
         </div>
     </div>
 

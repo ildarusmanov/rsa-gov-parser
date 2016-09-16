@@ -19,7 +19,9 @@
         "yiisoft/yii2-bootstrap": "*",
         "yiisoft/yii2-swiftmailer": "*",
         "curl/curl": "*",
-        "fabpot/goutte": "^3.1"
+        "guzzlehttp/guzzle": "^6.0",
+        "2amigos/yii2-date-picker-widget" : "~1.0",
+        "kartik-v/yii2-widgets": "dev-master"
     },
     "require-dev": {
         "yiisoft/yii2-codeception": "*",
