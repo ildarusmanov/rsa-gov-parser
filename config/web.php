@@ -38,14 +38,13 @@ $config = [
             'captchaParser' => 'app\services\CaptchaRecognizer',
         ],
         'db' => require(__DIR__ . '/db.php'),
-        /*
+        
         'urlManager' => [
-            'enablePrettyUrl' => true,
-            'showScriptName' => false,
-            'rules' => [
-            ],
+            //'enablePrettyUrl' => true,
+            //'showScriptName' => false, 
+            'defaultRoute' => 'parser/index',
         ],
-        */
+        
     ],
     'params' => $params,
 ];
