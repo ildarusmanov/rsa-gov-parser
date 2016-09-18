@@ -72,6 +72,11 @@ class ItemParser
 
                     foreach ($names as $i => $name) {
                         $n = trim($name->textContent);
+
+                        if (!$values->item($i)) {
+                            continue;
+                        }
+                        
                         $v = $values->item($i)->textContent;
 
                         if (empty($n) || empty($v)) {
