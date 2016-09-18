@@ -42,7 +42,6 @@ class Parser
                 'page_noid_' => $pageId,
             ],
             'cookies' => $cookiesJar,
-
         ]);
 
         return iconv('cp1251', 'utf-8', $response->getBody());
@@ -136,8 +135,6 @@ class Parser
     public function getCaptchaCode($captchaData)
     {
         $captchaRecognizer = new CaptchaRecognizer();
-
-        //$fileContent = file_get_contents($captchaUrl);
 
         return $captchaRecognizer->getCode($captchaData);
     }

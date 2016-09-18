@@ -8,6 +8,18 @@ class ParserController extends Controller
 {
     public function actionRun()
     {
-    	(new ParserManager())->run();
+    	$i = 0;
+
+    	while (true) {
+	    	$manager = new ParserManager();
+
+	    	if (!$manager->isLoading() || $i > 10) {
+	    		return;
+	    	}
+
+	    	$manager->run(); 
+
+	    	$i++;   		
+    	}
     }
 }

@@ -16,7 +16,7 @@ Thumbs.db
 /vendor
 
 #assets
-/web/csv
+/web/csv/parsed.csv
 
 # composer itself is not needed
 composer.phar
