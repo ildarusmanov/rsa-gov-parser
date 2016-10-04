@@ -81,11 +81,16 @@ class Parser
         return $items;
     }
 
+    public function getItemUrl($itemId)
+    {
+        return 'http://188.254.71.82/rds_ts_pub/?show=view&id_object=' . $itemId;
+    }
+
     public function getViewPage($itemId)
     {
         $baseUrl = 'http://188.254.71.82/rds_ts_pub/';
 
-        $itemUrl = $baseUrl . '?show=view&id_object=' . $itemId;
+        $itemUrl = $this->getItemUrl($itemId);
 
         $client = new Client([
             'base_uri' => $baseUrl,

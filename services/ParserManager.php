@@ -187,7 +187,17 @@ class ParserManager
 
         $this->log('Parse item #' . $itemId);
 
-        $this->parseItem($itemId);
+        $itemParsed = false;
+        for ($i = 0; $i < 3; $i++) {
+            if ($this->parseItem($itemId)) {
+                $itemParsed = true;
+                break;
+            }
+        }
+
+        if (!$itemParsed) {
+            $this->parseFailed($itemId);
+        }
 
         $this->state->setStateParam('items', $items);
 
@@ -233,6 +243,15 @@ class ParserManager
         }
     }
 
+    protected function parseFailed($itemId)
+    {
+        $this->log('Parse failed item id = ' . $itemId);
+
+        $data = [(new Parser())->getItemUrl($itemId)];
+
+        (new ParserWriter())->write($data);
+    }
+
     protected function parseItem($itemId)
     {
         if (!$itemId) {
@@ -243,9 +262,17 @@ class ParserManager
 
         $parsedData = (new Parser())->getViewPage($itemId);
 
-        $converter = new ItemDataConverter($parsedData);
+        if (sizeof($parsedData) == 0) {
+            return;
+        }
 
-        (new ParserWriter())->write($converter->getData());
+        $convertedData = (new ItemDataConverter($parsedData))->getData();
+
+        if (sizeof($convertedData) == 0) {
+            return;
+        }
+
+        (new ParserWriter())->write($convertedData);
     }
 
     protected function log($msg, $type = 'info')
