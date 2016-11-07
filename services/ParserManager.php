@@ -56,20 +56,24 @@ class ParserManager
 
         $this->lock();
 
-        $this->loadState();
+        try {
+            $this->loadState();
 
-        $step = $this->state->getStateParam('step');
+            $step = $this->state->getStateParam('step');
 
-        if ($step == null || $step == self::STEP_FINISHED) {
-            return;
-        }
+            if ($step == null || $step == self::STEP_FINISHED) {
+                return;
+            }
 
-        if ($step == self::STEP_INIT) {
-            $this->stepInit();
-        } elseif ($step == self::STEP_LOAD_LISTING) {
-            $this->stepLoadListing();
-        } elseif ($step == self::STEP_LOAD_ITEMS) {
-            $this->stepLoadItems();
+            if ($step == self::STEP_INIT) {
+                $this->stepInit();
+            } elseif ($step == self::STEP_LOAD_LISTING) {
+                $this->stepLoadListing();
+            } elseif ($step == self::STEP_LOAD_ITEMS) {
+                $this->stepLoadItems();
+            }
+        } catch (\Exception $e) {
+            \Yii::trace($e->getMessage());
         }
 
         $this->unlock();
@@ -183,7 +187,17 @@ class ParserManager
 
         $this->log('Parse item #' . $itemId);
 
-        $this->parseItem($itemId);
+        $itemParsed = false;
+        for ($i = 0; $i < 3; $i++) {
+            if ($this->parseItem($itemId)) {
+                $itemParsed = true;
+                break;
+            }
+        }
+
+        if (!$itemParsed) {
+            $this->parseFailed($itemId);
+        }
 
         $this->state->setStateParam('items', $items);
 
@@ -229,15 +243,36 @@ class ParserManager
         }
     }
 
+    protected function parseFailed($itemId)
+    {
+        $this->log('Parse failed item id = ' . $itemId);
+
+        $data = [(new Parser())->getItemUrl($itemId)];
+
+        (new ParserWriter())->write($data);
+    }
+
     protected function parseItem($itemId)
     {
+        if (!$itemId) {
+            return;
+        }
+
         $this->log('Parse item id = ' . $itemId);
 
         $parsedData = (new Parser())->getViewPage($itemId);
 
-        $converter = new ItemDataConverter($parsedData);
+        if (sizeof($parsedData) == 0) {
+            return;
+        }
 
-        (new ParserWriter())->write($converter->getData());
+        $convertedData = (new ItemDataConverter($parsedData))->getData();
+
+        if (sizeof($convertedData) == 0) {
+            return;
+        }
+
+        (new ParserWriter())->write($convertedData);
     }
 
     protected function log($msg, $type = 'info')
