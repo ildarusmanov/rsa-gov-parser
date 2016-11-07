@@ -33,13 +33,18 @@ class ItemDataConverter
 
 	protected function convert($data)
 	{
-		print_r($data);
-		
+		//print_r($data);
 		$this->data = [];
 
 		$iterator = new \RecursiveArrayIterator($data);
 
 		foreach(new \RecursiveIteratorIterator($iterator) as $v) {
+			$v = trim($v);
+			
+			if (empty($v)) {
+				continue;
+			}
+
 			$this->data[] = $v;
 		}
 	}

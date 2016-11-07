@@ -273,6 +273,8 @@ class ParserManager
         }
 
         (new ParserWriter())->write($convertedData);
+
+        return true;
     }
 
     protected function log($msg, $type = 'info')
