@@ -10,7 +10,7 @@ class Parser
     const PAGE_LIMIT = 50;
     const ITEM_REGEX = '/<tr id="id\_([^"]+)"/siU';
     const CAPTCHA_REGEX = '"captcha\.php\?sid=\d+"';
-    const MAX_PAGE_ID = 2;
+    const MAX_PAGE_ID = 1000;
 
     public function __construct($data = [])
     {
