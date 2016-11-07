@@ -1,0 +1,8 @@
+<Location "/var/www/html/parser/web">
+  AuthType Basic
+  AuthName "Private Area"
+  AuthBasicProvider file
+  AuthUserFile "/var/www/.htpasswd"
+  Require valid-user
+</Location>
+
