@@ -49,11 +49,24 @@ class Parser
 
     public function getPageItems($content)
     {
-        if (!preg_match_all(self::ITEM_REGEX, $content, $matches)) {
+        if (!preg_match_all(self::ITEM_REGEX, $content, $matches)
+            || empty($matches[1])
+        ) {
             throw new \Exception('No items found');
         }
 
-        return $matches[1];
+        $result = [];
+        foreach ($matches[1] as $itemId) {
+            if (empty($itemId)
+                && $itemId == 'empty'
+            ) {
+                return $result;
+            }
+
+            $result[] = $itemId;
+        }
+
+        return $result;
     }
 
     public function getItemsByPageId($pageId)
@@ -64,7 +77,9 @@ class Parser
             while ($pageId < self::MAX_PAGE_ID) {
                 $content = $this->getListingPage($pageId);
 
-                foreach ($this->getPageItems($content) as $item) {
+                $pageItems = $this->getPageItems($content);
+
+                foreach ($pageItems as $item) {
                     $items[] = $item;
                 }
 
